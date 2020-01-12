@@ -54,7 +54,16 @@ public class NetworkList {
 		while(iterator != null && !iterator.getName().equals(name)) iterator = iterator.getNext();
 		return iterator != null;
 	}
-	
+	public String[] names() {
+		String s = "";
+		Node<Network> iterator = first;
+		while(iterator != null) {
+			s += iterator.getName() + " ";
+			iterator = iterator.getNext();
+		}
+		return ((String)s.subSequence(0, s.length() - 1)).split(" ");
+	}
+
 	private class Node<T>{
 		
 		private String name;
@@ -80,6 +89,7 @@ public class NetworkList {
 		private void setName(String Name) {
 			this.name = Name;
 		}
+		@SuppressWarnings("unused")
 		private void setInfo(T info) {
 			this.info = info;
 		}

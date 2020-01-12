@@ -1,5 +1,10 @@
 package console;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
 import java.util.ArrayList;
 import java.util.Scanner;
 
@@ -19,7 +24,9 @@ public class Console {
 	
 	public static void main(String[] args) {
 		NetworkList networks = new NetworkList();
-		String network_path = "bin\\networks\\";
+		DatasetList datasets = new DatasetList();
+		String networks_path = "bin\\resources\\networks\\";
+		String dataset_path = "bin\\resources\\datasets\\";
 		
 		boolean shouldContinue = true;
 		
@@ -28,6 +35,138 @@ public class Console {
 				String[] command = receiveCommand(">");
 				switch(command[0].toLowerCase()) {
 					case "quit": shouldContinue = false; break;
+					case "import_dataset":
+						if(command.length < 3) System.out.println("import_dataset mush be followed by the path to the dataset's folder followed by the dataset's name");
+						else {
+							File file = new File(command[1] + "\\" + command[2] + ".cvs");
+							if(!file.exists()) System.out.println("there is no dataset with the name '" + command[2] + "' in the given path");
+							else {
+								BufferedReader reader = new BufferedReader(new FileReader(file));
+								Dataset dataset = new Dataset();
+								while(reader.ready()) {
+									String[] data = reader.readLine().split(",");
+									float inputs[] = new float[Integer.parseInt(data[0])];
+									float results[] = new float[Integer.parseInt(data[inputs.length + 1])];
+									int i = 0;
+									while(i < inputs.length && i < results.length) {
+										if(i < inputs.length) inputs[i] = Float.parseFloat(data[i + 1]);
+										if(i < results.length) results[i] = Float.parseFloat(data[i + inputs.length + 2]);
+									}
+									dataset.addData(inputs, results);
+								}
+								reader.close();
+								if(datasets.addDataset(dataset, command[2])) System.out.println("dataset '" + command[2] + "' was successfully imported");
+								else System.out.println("there already is a dataset with the name '" + command[2] + "' in the given path");
+							}
+						}
+						break;
+					case "export_dataset":
+						break;
+					case "load_dataset":
+						if(command.length == 1) System.out.println("import_dataset mush be followed by the dataset's name");
+						else {
+							File file = new File(dataset_path + command[1] + ".cvs");
+							if(!file.exists()) System.out.println("there is no dataset with the name '" + command[1] + "'");
+							else {
+								BufferedReader reader = new BufferedReader(new FileReader(file));
+								Dataset dataset = new Dataset();
+								while(reader.ready()) {
+									String[] data = reader.readLine().split(",");
+									float inputs[] = new float[Integer.parseInt(data[0])];
+									float results[] = new float[Integer.parseInt(data[inputs.length + 1])];
+									int i = 0;
+									while(i < inputs.length && i < results.length) {
+										if(i < inputs.length) inputs[i] = Float.parseFloat(data[i + 1]);
+										if(i < results.length) results[i] = Float.parseFloat(data[i + inputs.length + 2]);
+									}
+									dataset.addData(inputs, results);
+								}
+								reader.close();
+								if(datasets.addDataset(dataset, command[1])) System.out.println("dataset '" + command[1] + "' was successfully loaded");
+								else System.out.println("there already is a dataset with the name '" + command[1] + "'");
+							}
+						}
+						break;
+					case "save_dataset":
+						break;
+					case "import_network":
+						if(command.length < 3) System.out.println("import_network command must be followed by the path to the network's folder followed by the network's name");
+						else {
+							if(networks.networkExists(command[2])) System.out.print("there already is a network named '" + command[2] + "'");
+							else {
+								File file = new File(command[1] + "\\" + command[2] + ".cvs");
+								if(file.exists()) {
+									BufferedReader br = new BufferedReader(new FileReader(file));
+									networks.addNetwork(new Network(br), command[2]);
+									System.out.println("successfully imported network '" + command[2] + "'");
+								}
+								else System.out.println("no network with the name '" + command[2] + "' was found");
+							}
+						}
+						break;
+					case "export_network":
+						if(command.length == 1)System.out.println("export_network command must be followed by the path to the save folder followed by the network's name");
+						else {
+							Network n = networks.getNetwork(command[2]);
+							if(n == null)System.out.println("the is no network with the name '" + command[2] + "' in the given path");
+							else {
+								String s = n.saveString();
+								File file = new File(command[1] + "\\" + command[2] + ".cvs");
+								file.createNewFile();
+								BufferedWriter bw = new BufferedWriter(new FileWriter(file));
+								bw.write(s);
+								bw.flush();
+								bw.close();
+								System.out.println("successfully exported network '" + command[2] + "'");
+							}
+						}
+						break;
+					case "load_network":
+						if(command.length == 1) System.out.println("load_network command must be followed by the name of the network which is to be loaded");
+						else {
+							File file = new File(networks_path + command[1] + ".cvs");
+							if(file.exists()) {
+								BufferedReader br = new BufferedReader(new FileReader(file));
+								networks.addNetwork(new Network(br), command[1]);
+								System.out.println("successfully loaded network '" + command[1] + "'");
+							}
+							else System.out.println("no network with the name '" + command[1] + "' was found");
+						}
+						break;
+					case "save_network":
+						if(command.length == 1)System.out.println("save_network command must be followed by the name of the network which is to be saved");
+						else {
+							Network n = networks.getNetwork(command[1]);
+							if(n == null)System.out.println("the is no network with the name '" + command[1] + "'");
+							else {
+								String s = n.saveString();
+								File file = new File(networks_path + command[1] + ".cvs");
+								file.createNewFile();
+								BufferedWriter bw = new BufferedWriter(new FileWriter(file));
+								bw.write(s);
+								bw.flush();
+								bw.close();
+								System.out.println("successfully saved network '" + command[1] + "'");
+							}
+						}
+						break;
+					case "show_network_list":
+						String[] list = networks.names();
+						for(String s : list) {
+							System.out.println(s);
+						}
+						break;
+					case "show_network":
+						if(command.length == 1)System.out.println("show_network command must be followed by network name");
+						else {
+							Network n = networks.getNetwork(command[1]);
+							if(n == null) System.out.println("there is no network with the name '" + command[1] + "'");
+							else {
+								System.out.println("name: " + command[1]);
+								n.printNetwork();
+							}
+						}
+						break;
 					case "create":
 						boolean cancel = false;
 						String network_name = "";
